@@ -48,8 +48,9 @@ Run the training script. The example below trains a word-level model for five
 epochs with gradient accumulation and cosine annealing.
 
 ```bash
+cd /home/eating/Auto-Regressive_Transforme
 python -m src.train \
-  --data-path /path/to/corpus.txt \
+  --data-path ./data/corpus.txt \
   --tokenizer word \
   --sequence-length 256 \
   --batch-size 8 \

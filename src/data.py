@@ -33,6 +33,7 @@ class TextSequenceDataset(Dataset):
         - ``sequence_length``：由配置或命令行传入的序列长度，用于控制每个样本的长度。
         - ``pad_token_id``：由分词器提供的填充标记ID，用于后续批处理填充。
         """
+        print(f"Number of tokens: {len(token_ids)}")
         if sequence_length < 2:
             raise ValueError("Sequence length must be >= 2")
         self.token_ids = token_ids
@@ -129,6 +130,8 @@ def train_val_split(tokens: List[int], split_ratio: float = 0.9) -> Tuple[List[i
     split_index = int(len(tokens) * split_ratio)
     train_tokens = tokens[:split_index]
     val_tokens = tokens[split_index:]
+    print(f"Number of training tokens: {len(train_tokens)}")
+    print(f"Number of validation tokens: {len(val_tokens)}")
     return train_tokens, val_tokens
 
 
