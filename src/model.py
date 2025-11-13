@@ -70,7 +70,7 @@ class AutoregressiveTransformer(nn.Module):
         self.positional_encoding = PositionalEncoding(d_model, max_seq_len, dropout=dropout)
         self.layers = nn.ModuleList(
             [
-                nn.TransformerDecoderLayer(
+                nn.TransformerEncoderLayer(
                     d_model=d_model,
                     nhead=nhead,
                     dim_feedforward=dim_feedforward,
@@ -108,16 +108,17 @@ class AutoregressiveTransformer(nn.Module):
         embeddings = self.token_embedding(tokens)
         hidden = self.positional_encoding(embeddings)
         seq_len = tokens.size(1)
-        causal_mask = torch.triu(torch.ones((seq_len, seq_len), device=device), diagonal=1)
-        causal_mask = causal_mask.masked_fill(causal_mask == 1, float("-inf"))
+        causal_mask = torch.triu(
+            torch.ones((seq_len, seq_len), device=device, dtype=torch.bool),
+            diagonal=1,
+        )
 
         def layer_forward(layer: nn.Module, hidden_states: torch.Tensor) -> torch.Tensor:
-            """内部函数：封装单层解码器的调用，供梯度检查点复用。"""
+            """内部函数：封装单层自注意力块的调用，供梯度检查点复用。"""
             return layer(
                 hidden_states,
-                memory=None,
-                tgt_mask=causal_mask,
-                tgt_key_padding_mask=padding_mask,
+                src_mask=causal_mask,
+                src_key_padding_mask=padding_mask,
             )
 
         for layer in self.layers:

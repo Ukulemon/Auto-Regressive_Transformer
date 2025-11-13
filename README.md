@@ -49,20 +49,25 @@ epochs with gradient accumulation and cosine annealing.
 
 ```bash
 cd /home/eating/Auto-Regressive_Transforme
+```
+```bash
 python -m src.train \
   --data-path ./data/corpus.txt \
+  --learning-rate 3e-4 \
   --tokenizer word \
   --sequence-length 256 \
   --batch-size 8 \
-  --epochs 5 \
-  --gradient-accumulation-steps 4 \
+  --epochs 1000 \
+  --gradient-accumulation-steps 1 \
   --d-model 512 \
   --nhead 8 \
   --num-layers 6 \
   --dim-feedforward 2048 \
   --cosine-t-max 5 \
   --output-dir checkpoints \
-  --device cuda
+  --device cuda \
+  --pretrained ./checkpoints/best.pt \
+  --patience 1000
 ```
 
 Key options:
@@ -84,14 +89,14 @@ After training, optionally generate text conditioned on a prompt:
 
 ```bash
 python -m src.train \
-  --data-path /path/to/corpus.txt \
+  --data-path ./data/corpus.txt \
   --tokenizer word \
   --sequence-length 256 \
   --batch-size 8 \
   --epochs 0 \
   --resume checkpoints/best.pt \
-  --generate "Once upon a time" \
-  --max-generate-length 100 \
+  --generate "我们" \
+  --max-generate-length 30 \
   --temperature 0.8 \
   --top-k 50
 ```

@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, random_split
 
 from .tokenizer import BaseTokenizer, build_tokenizer, pad_sequences
 
@@ -121,7 +121,6 @@ def preprocess_corpus(
 
 def train_val_split(tokens: List[int], split_ratio: float = 0.9) -> Tuple[List[int], List[int]]:
     """按照比例将编码后的整段序列切分为训练与验证部分。
-
     参数说明：
     - ``tokens``：由``preprocess_corpus``生成的整段ID列表。
     - ``split_ratio``：来自配置的训练集占比，默认90%。
@@ -151,9 +150,28 @@ def create_dataloaders(
     - ``batch_size``/``sequence_length``/``num_workers``/``split_ratio``：用户配置或命令行提供的训练参数。
     返回可直接供训练循环使用的训练与验证``DataLoader``。
     """
-    train_tokens, val_tokens = train_val_split(token_ids, split_ratio=split_ratio)
-    train_dataset = TextSequenceDataset(train_tokens, sequence_length, tokenizer.pad_token_id)
-    val_dataset = TextSequenceDataset(val_tokens, sequence_length, tokenizer.pad_token_id)
+    full_dataset = TextSequenceDataset(token_ids, sequence_length, tokenizer.pad_token_id)
+    if len(full_dataset) < 2:
+        raise ValueError(
+            "Not enough sequences to create both training and validation splits. "
+            "Provide more data or reduce sequence length."
+        )
+
+    train_size = int(len(full_dataset) * split_ratio)
+    val_size = len(full_dataset) - train_size
+    if val_size == 0:
+        val_size = 1
+        train_size -= 1
+    if train_size <= 0:
+        raise ValueError(
+            "Training split would be empty. Adjust split ratio or increase dataset size."
+        )
+
+    train_dataset, val_dataset = random_split(
+        full_dataset,
+        [train_size, val_size],
+        generator=torch.Generator().manual_seed(42),
+    )
 
     def collate_fn(batch):
         """内部函数：包装``collate_batch``并固定填充标记ID，供``DataLoader``回调。"""

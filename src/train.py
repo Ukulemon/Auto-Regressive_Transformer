@@ -92,6 +92,7 @@ def setup_training(args: argparse.Namespace) -> Tuple[TrainingConfig, BaseTokeni
     )
 
     raw_text = read_corpus(args.data_path)
+    print(raw_text)
     tokenizer, token_ids = preprocess_corpus(
         raw_text,
         tokenizer_type=args.tokenizer,
